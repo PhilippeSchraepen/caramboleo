@@ -89,4 +89,21 @@ describe('MatchContext - 20 Inning Rule & Sync', () => {
     game1 = result.current.match.games.find(g => g.id === 1);
     expect(game1?.status).toBe('finished');
   });
+
+  it('should update lastReset when match is reset', async () => {
+    const { result } = renderHook(() => useMatch(), { wrapper });
+    
+    // Mock confirm to return true
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    act(() => {
+      result.current.resetMatch();
+    });
+
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(result.current.match.lastReset).toBeDefined();
+    expect(typeof result.current.match.lastReset).toBe('string');
+    
+    confirmSpy.mockRestore();
+  });
 });

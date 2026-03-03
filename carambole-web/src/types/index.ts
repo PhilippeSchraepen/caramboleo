@@ -22,6 +22,7 @@ export interface Game {
 export interface Match {
   id: string;
   date: string;
+  lastReset?: string;
   teamHome: string;
   teamAway: string;
   games: Game[];

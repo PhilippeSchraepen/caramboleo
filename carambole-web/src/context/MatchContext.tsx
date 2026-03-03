@@ -230,7 +230,11 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
 
   const resetMatch = () => {
     if (confirm('Are you sure you want to reset all data for this match?')) {
-      setMatch(defaultMatch);
+      const resetMatchData = {
+        ...defaultMatch,
+        lastReset: new Date().toLocaleString()
+      };
+      setMatch(resetMatchData);
       localStorage.removeItem(LOCAL_STORAGE_KEY);
     }
   };

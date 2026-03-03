@@ -25,6 +25,11 @@ export default function MatchDisplay({ initialMatch }: MatchDisplayProps) {
       <div className="card text-center">
         <h1>{match.teamHome} vs {match.teamAway}</h1>
         <p>{match.date}</p>
+        {match.lastReset && (
+          <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '-10px' }}>
+            Last reset: {match.lastReset}
+          </p>
+        )}
         <button 
           onClick={resetMatch} 
           className="button button-accent" 
