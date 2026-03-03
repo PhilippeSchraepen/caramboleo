@@ -97,7 +97,7 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
   const [match, setMatch] = useState<Match>(defaultMatch);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount and try to fetch from Redis
   useEffect(() => {
     const savedMatch = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (savedMatch) {
@@ -107,15 +107,66 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
         console.error('Failed to parse saved match data', e);
       }
     }
-    setIsInitialized(true);
+
+    const fetchMatch = async () => {
+        try {
+            const response = await fetch(`/api/match/${defaultMatch.id}`);
+            if (response.ok) {
+                const cloudMatch = await response.json();
+                setMatch(cloudMatch);
+            }
+        } catch (e) {
+            console.error('Could not fetch from Redis (might not be configured)', e);
+        }
+        setIsInitialized(true);
+    };
+    
+    fetchMatch();
   }, []);
 
-  // Save to localStorage on changes
+  // Sync to Redis and LocalStorage on changes
   useEffect(() => {
     if (isInitialized) {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(match));
+      
+      const syncToCloud = async () => {
+          try {
+              await fetch(`/api/match/${match.id}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(match),
+              });
+          } catch (e) {
+              console.error('Cloud sync failed', e);
+          }
+      };
+      
+      syncToCloud();
     }
   }, [match, isInitialized]);
+
+  // LIVE POLLING: Check for updates every 5 seconds if we are not the one updating
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/match/${match.id}`);
+        if (response.ok) {
+          const cloudMatch = await response.json();
+          // Simple check: if turns count is different, update
+          const totalTurnsCloud = cloudMatch.games.reduce((sum: number, g: Game) => sum + g.turnsHome.length + g.turnsAway.length, 0);
+          const totalTurnsLocal = match.games.reduce((sum: number, g: Game) => sum + g.turnsHome.length + g.turnsAway.length, 0);
+          
+          if (totalTurnsCloud !== totalTurnsLocal) {
+            setMatch(cloudMatch);
+          }
+        }
+      } catch (e) {
+        // Silent error
+      }
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [match.id, match.games]);
 
   const addTurn = (gameId: number, player: 'home' | 'away', points: number) => {
     setMatch(prev => {
