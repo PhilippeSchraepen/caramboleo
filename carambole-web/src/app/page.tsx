@@ -1,89 +1,102 @@
-'use client';
+import { Redis } from '@upstash/redis';
+import MatchDisplay from '@/components/MatchDisplay';
+import { Match, Game } from '@/types';
 
-import Link from 'next/link';
-import { useMatch } from '@/context/MatchContext';
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
-export default function MatchOverview() {
-  const { match, resetMatch } = useMatch();
+const initialGames: Game[] = [
+  {
+    id: 1,
+    playerHome: { name: 'Wies Peeters', handicap: 28 },
+    playerAway: { name: 'John Donckers', handicap: 25 },
+    turnsHome: [],
+    turnsAway: [],
+    targetHome: 28,
+    targetAway: 25,
+    maxTurns: 20,
+    status: 'ongoing'
+  },
+  {
+    id: 2,
+    playerHome: { name: 'Hugo Hectors', handicap: 18 },
+    playerAway: { name: 'Cis Suykerbuyk', handicap: 15 },
+    turnsHome: [],
+    turnsAway: [],
+    targetHome: 18,
+    targetAway: 15,
+    maxTurns: 20,
+    status: 'ongoing'
+  },
+  {
+    id: 3,
+    playerHome: { name: 'Jef Schrooyen', handicap: 51 },
+    playerAway: { name: 'Fred Dictus', handicap: 59 },
+    turnsHome: [],
+    turnsAway: [],
+    targetHome: 51,
+    targetAway: 59,
+    maxTurns: 20,
+    status: 'ongoing'
+  },
+  {
+    id: 4,
+    playerHome: { name: 'Cyriel van Ginneken', handicap: 20 },
+    playerAway: { name: 'Leo Costermans', handicap: 15 },
+    turnsHome: [],
+    turnsAway: [],
+    targetHome: 20,
+    targetAway: 15,
+    maxTurns: 20,
+    status: 'ongoing'
+  },
+  {
+    id: 5,
+    playerHome: { name: 'Hubert Uytdewilge', handicap: 33 },
+    playerAway: { name: 'Ed Ossenblock', handicap: 35 },
+    turnsHome: [],
+    turnsAway: [],
+    targetHome: 33,
+    targetAway: 35,
+    maxTurns: 20,
+    status: 'ongoing'
+  },
+  {
+    id: 6,
+    playerHome: { name: 'Stan Elst', handicap: 42 },
+    playerAway: { name: 'Willy Lodewycks', handicap: 40 },
+    turnsHome: [],
+    turnsAway: [],
+    targetHome: 42,
+    targetAway: 40,
+    maxTurns: 20,
+    status: 'ongoing'
+  }
+];
 
-  const calculateTotalPoints = (turns: { points: number }[]) => {
-    return turns.reduce((sum, t) => sum + t.points, 0);
-  };
+const defaultMatch: Match = {
+  id: '1',
+  date: '2026-03-03',
+  teamHome: 'Kerkuilen',
+  teamAway: 'Rooie bal 2',
+  games: initialGames
+};
 
-  const calculateMatchPoints = (total: number, target: number) => {
-    return ((total / target) * 10).toFixed(2);
-  };
+export default async function Home() {
+  let initialMatch = defaultMatch;
 
-  return (
-    <div>
-      <div className="card text-center">
-        <h1>{match.teamHome} vs {match.teamAway}</h1>
-        <p>{match.date}</p>
-        <button 
-          onClick={resetMatch} 
-          className="button button-accent" 
-          style={{ marginTop: '10px' }}
-        >
-          Reset Match
-        </button>
-      </div>
+  if (process.env.UPSTASH_REDIS_REST_URL) {
+    try {
+      const cloudMatch = await redis.get<Match>('match:1');
+      if (cloudMatch) {
+        initialMatch = cloudMatch;
+      }
+    } catch (e) {
+      console.error('Failed to fetch initial match from Redis', e);
+    }
+  }
 
-      <div className="card">
-        <h2>Game Overview</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Game</th>
-              <th>Player Home</th>
-              <th>Player Away</th>
-              <th>Score</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {match.games.map((game) => {
-              const scoreHome = calculateTotalPoints(game.turnsHome);
-              const scoreAway = calculateTotalPoints(game.turnsAway);
-              const matchPointsHome = calculateMatchPoints(scoreHome, game.targetHome);
-              const matchPointsAway = calculateMatchPoints(scoreAway, game.targetAway);
-
-              return (
-                <tr key={game.id}>
-                  <td>Game {game.id}</td>
-                  <td>
-                    {game.playerHome.name} ({game.targetHome})
-                    <br />
-                    <small>MP: {matchPointsHome}</small>
-                  </td>
-                  <td>
-                    {game.playerAway.name} ({game.targetAway})
-                    <br />
-                    <small>MP: {matchPointsAway}</small>
-                  </td>
-                  <td>{scoreHome} - {scoreAway}</td>
-                  <td>
-                    <span className={`status-badge ${game.status === 'ongoing' ? 'status-ongoing' : 'status-finished'}`}>
-                      {game.status}
-                    </span>
-                  </td>
-                  <td>
-                    <Link href={`/game/${game.id}`} className="button button-primary">
-                      {game.status === 'ongoing' ? 'Referee' : 'View'}
-                    </Link>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="card">
-        <h3>Match Summary</h3>
-        <p>Total Match Points Home: {match.games.reduce((sum, g) => sum + parseFloat(calculateMatchPoints(calculateTotalPoints(g.turnsHome), g.targetHome)), 0).toFixed(2)}</p>
-        <p>Total Match Points Away: {match.games.reduce((sum, g) => sum + parseFloat(calculateMatchPoints(calculateTotalPoints(g.turnsAway), g.targetAway)), 0).toFixed(2)}</p>
-      </div>
-    </div>
-  );
+  return <MatchDisplay initialMatch={initialMatch} />;
 }
