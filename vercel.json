@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd carambole-web && npm run build",
+  "outputDirectory": "carambole-web/.next",
+  "installCommand": "cd carambole-web && npm install",
+  "framework": "nextjs"
+}
