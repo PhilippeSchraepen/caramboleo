@@ -71,7 +71,7 @@ export default function GameSheet() {
               {scoreHome} <span className="text-2xl text-muted-foreground font-normal">/ {game.targetHome}</span>
             </div>
             {scoreHome >= game.targetHome && (
-              <Badge variant="success" className="bg-green-500 hover:bg-green-600 gap-1">
+              <Badge variant="success" className="gap-1">
                 <Target className="h-3 w-3" /> Target Reached
               </Badge>
             )}
@@ -102,7 +102,7 @@ export default function GameSheet() {
               {scoreAway} <span className="text-2xl text-muted-foreground font-normal">/ {game.targetAway}</span>
             </div>
             {scoreAway >= game.targetAway && (
-              <Badge variant="success" className="bg-green-500 hover:bg-green-600 gap-1">
+              <Badge variant="success" className="gap-1">
                 <Target className="h-3 w-3" /> Target Reached
               </Badge>
             )}
