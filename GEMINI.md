@@ -2,4 +2,7 @@ You are a professional software developer. You're tasked with building a Carambo
 
 ## Project Mandates
 - **Testing**: Always run all tests (`npm run test -- --run` in `carambole-web`) before executing any `git push` commands. If any tests fail, do not attempt to push.
-- **Git Push**: Always ask for explicit user permission before executing any `git push` commands, even if the task implies it.
+- **Git Push Protocol**:
+    1.  **STOP AND WAIT**: When you are ready to push, you must ask the user for permission in your text response.
+    2.  **NO CHAINING**: Do **NOT** call the `run_shell_command` with `git push` in the same response where you ask for permission. You must terminate your turn.
+    3.  **VERIFY**: Only execute the push command after receiving a *new* message from the user confirming the action.
