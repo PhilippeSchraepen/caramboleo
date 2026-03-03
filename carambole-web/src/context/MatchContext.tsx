@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Match, Game, Turn } from '../types';
 
 interface MatchContextType {
@@ -8,11 +8,15 @@ interface MatchContextType {
   addTurn: (gameId: number, player: 'home' | 'away', points: number) => void;
   undoTurn: (gameId: number) => void;
   updateGameStatus: (gameId: number, status: 'ongoing' | 'finished') => void;
+  resetMatch: () => void;
 }
 
 const MatchContext = createContext<MatchContextType | undefined>(undefined);
 
+const LOCAL_STORAGE_KEY = 'carambole_match_data';
+
 const initialGames: Game[] = [
+  // ... (keeping the same initial games structure)
   {
     id: 1,
     playerHome: { name: 'Wies Peeters', handicap: 28 },
@@ -81,14 +85,37 @@ const initialGames: Game[] = [
   }
 ];
 
+const defaultMatch: Match = {
+  id: '1',
+  date: '2026-03-03',
+  teamHome: 'Kerkuilen',
+  teamAway: 'Rooie bal 2',
+  games: initialGames
+};
+
 export const MatchProvider = ({ children }: { children: ReactNode }) => {
-  const [match, setMatch] = useState<Match>({
-    id: '1',
-    date: '2026-03-03',
-    teamHome: 'Kerkuilen',
-    teamAway: 'Rooie bal 2',
-    games: initialGames
-  });
+  const [match, setMatch] = useState<Match>(defaultMatch);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const savedMatch = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (savedMatch) {
+      try {
+        setMatch(JSON.parse(savedMatch));
+      } catch (e) {
+        console.error('Failed to parse saved match data', e);
+      }
+    }
+    setIsInitialized(true);
+  }, []);
+
+  // Save to localStorage on changes
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(match));
+    }
+  }, [match, isInitialized]);
 
   const addTurn = (gameId: number, player: 'home' | 'away', points: number) => {
     setMatch(prev => {
@@ -101,15 +128,10 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
             updatedGame.turnsAway = [...game.turnsAway, { points }];
           }
           
-          // Check if game should finish
-          const totalHome = updatedGame.turnsHome.reduce((sum, t) => sum + t.points, 0);
-          const totalAway = updatedGame.turnsAway.reduce((sum, t) => sum + t.points, 0);
           const numHome = updatedGame.turnsHome.length;
           const numAway = updatedGame.turnsAway.length;
           const maxTurns = updatedGame.maxTurns;
           
-          // Rule: The game always lasts exactly 20 turns for both players.
-          // It only finishes when BOTH players have reached maxTurns.
           if (numHome >= maxTurns && numAway >= maxTurns) {
             updatedGame.status = 'finished';
           }
@@ -127,9 +149,6 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
       const updatedGames = prev.games.map(game => {
         if (game.id === gameId) {
           const updatedGame = { ...game };
-          // Undo last action logic: if turns are equal, undo home. If home > away, undo home. 
-          // Simplified: pop the last turn from the one that has more or the same if they are equal (referee usually inputs turn by turn).
-          // Actually, let's just pop from home if home.length >= away.length, else away.
           if (updatedGame.turnsHome.length > updatedGame.turnsAway.length) {
              updatedGame.turnsHome = updatedGame.turnsHome.slice(0, -1);
           } else if (updatedGame.turnsAway.length > 0) {
@@ -158,8 +177,15 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const resetMatch = () => {
+    if (confirm('Are you sure you want to reset all data for this match?')) {
+      setMatch(defaultMatch);
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+    }
+  };
+
   return (
-    <MatchContext.Provider value={{ match, addTurn, undoTurn, updateGameStatus }}>
+    <MatchContext.Provider value={{ match, addTurn, undoTurn, updateGameStatus, resetMatch }}>
       {children}
     </MatchContext.Provider>
   );

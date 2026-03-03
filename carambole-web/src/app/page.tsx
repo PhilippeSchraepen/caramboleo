@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useMatch } from '@/context/MatchContext';
 
 export default function MatchOverview() {
-  const { match } = useMatch();
+  const { match, resetMatch } = useMatch();
 
   const calculateTotalPoints = (turns: { points: number }[]) => {
     return turns.reduce((sum, t) => sum + t.points, 0);
@@ -19,6 +19,13 @@ export default function MatchOverview() {
       <div className="card text-center">
         <h1>{match.teamHome} vs {match.teamAway}</h1>
         <p>{match.date}</p>
+        <button 
+          onClick={resetMatch} 
+          className="button button-accent" 
+          style={{ marginTop: '10px' }}
+        >
+          Reset Match
+        </button>
       </div>
 
       <div className="card">

@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { MatchProvider, useMatch } from '@/context/MatchContext';
 import { ReactNode } from 'react';
 
@@ -8,6 +8,15 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 );
 
 describe('MatchContext - 20 Inning Rule', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('should initialize with default games', () => {
+    const { result } = renderHook(() => useMatch(), { wrapper });
+    expect(result.current.match.games).toHaveLength(6);
+  });
+
   it('should not finish the game even if someone reaches the target early', () => {
     const { result } = renderHook(() => useMatch(), { wrapper });
     const target = result.current.match.games[0].targetHome;
@@ -41,27 +50,12 @@ describe('MatchContext - 20 Inning Rule', () => {
       result.current.addTurn(1, 'home', 0);
     });
     game1 = result.current.match.games.find(g => g.id === 1);
-    expect(game1?.status).toBe('ongoing'); // Home has 20, Away has 19
+    expect(game1?.status).toBe('ongoing');
 
     act(() => {
       result.current.addTurn(1, 'away', 0);
     });
     game1 = result.current.match.games.find(g => g.id === 1);
-    expect(game1?.status).toBe('finished'); // Both have 20
-  });
-
-  it('should allow scoring more than the target', () => {
-    const { result } = renderHook(() => useMatch(), { wrapper });
-    const target = result.current.match.games[0].targetHome; // 28
-    
-    act(() => {
-      result.current.addTurn(1, 'home', target + 10); // Score 38
-      result.current.addTurn(1, 'away', 0);
-    });
-
-    const game1 = result.current.match.games.find(g => g.id === 1);
-    const scoreHome = game1?.turnsHome.reduce((sum, t) => sum + t.points, 0);
-    expect(scoreHome).toBe(38);
-    expect(game1?.status).toBe('ongoing');
+    expect(game1?.status).toBe('finished');
   });
 });

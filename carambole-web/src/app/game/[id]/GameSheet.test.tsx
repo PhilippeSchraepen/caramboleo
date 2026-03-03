@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import GameSheet from './page';
 import { MatchProvider } from '@/context/MatchContext';
 
@@ -9,6 +9,10 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('GameSheet UI', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it('should render player names and targets', () => {
     render(
       <MatchProvider>
@@ -43,11 +47,12 @@ describe('GameSheet UI', () => {
       </MatchProvider>
     );
     
-    expect(screen.getByText(/Recording for: Wies Peeters/)).toBeInTheDocument();
+    // Using a more flexible matcher for text split across elements
+    expect(screen.getByText((content) => content.includes('Recording for: Wies Peeters'))).toBeInTheDocument();
     
     const pointBtn = screen.getByRole('button', { name: '5' });
     fireEvent.click(pointBtn);
     
-    expect(screen.getByText(/Recording for: John Donckers/)).toBeInTheDocument();
+    expect(screen.getByText((content) => content.includes('Recording for: John Donckers'))).toBeInTheDocument();
   });
 });
