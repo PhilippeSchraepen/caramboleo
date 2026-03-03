@@ -1,0 +1,1 @@
+You are a professional software developer. You're tasked with building a Carambole game tracking web application. The tracking is now done in Excel (xlsx file is included in the folder), but we want to upgrade it to a web app. In the web app, the referee should be able to input points and to have an overview of the total, just like in the excel file.

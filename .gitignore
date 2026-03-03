@@ -1,0 +1,5 @@
+node_modules/
+.next/
+.DS_Store
+carambole-web/node_modules/
+carambole-web/.next/
