@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { RefreshCw } from 'lucide-react';
+import { calculateTotalPoints, calculateMatchPoints } from '@/lib/utils';
 
 interface MatchDisplayProps {
   initialMatch: Match;
@@ -15,14 +16,6 @@ interface MatchDisplayProps {
 
 export default function MatchDisplay({ initialMatch }: MatchDisplayProps) {
   const { match, resetMatch } = useMatch();
-
-  const calculateTotalPoints = (turns: { points: number }[]) => {
-    return turns.reduce((sum, t) => sum + t.points, 0);
-  };
-
-  const calculateMatchPoints = (total: number, target: number) => {
-    return ((total / target) * 10).toFixed(2);
-  };
 
   return (
     <div className="space-y-6">

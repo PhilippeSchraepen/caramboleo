@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, RotateCcw, Target } from 'lucide-react';
 import { useRef, useEffect } from 'react';
+import { calculateTotalPoints, calculateAverage, calculateHighestSeries } from '@/lib/utils';
 
 export default function GameSheet() {
   const { id } = useParams();
@@ -28,8 +29,8 @@ export default function GameSheet() {
     return <div className="p-8 text-center">Game not found</div>;
   }
 
-  const scoreHome = game.turnsHome.reduce((sum, t) => sum + t.points, 0);
-  const scoreAway = game.turnsAway.reduce((sum, t) => sum + t.points, 0);
+  const scoreHome = calculateTotalPoints(game.turnsHome);
+  const scoreAway = calculateTotalPoints(game.turnsAway);
   
   const currentTurn = game.turnsHome.length > game.turnsAway.length 
     ? game.turnsHome.length 
@@ -81,11 +82,11 @@ export default function GameSheet() {
               </div>
               <div>
                 <div className="text-muted-foreground">Avg</div>
-                <div className="font-bold">{game.turnsHome.length > 0 ? (scoreHome / game.turnsHome.length).toFixed(2) : '0.00'}</div>
+                <div className="font-bold">{calculateAverage(scoreHome, game.turnsHome.length)}</div>
               </div>
               <div>
                 <div className="text-muted-foreground">High</div>
-                <div className="font-bold">{game.turnsHome.length > 0 ? Math.max(...game.turnsHome.map(t => t.points)) : 0}</div>
+                <div className="font-bold">{calculateHighestSeries(game.turnsHome)}</div>
               </div>
             </div>
           </CardContent>
@@ -112,11 +113,11 @@ export default function GameSheet() {
               </div>
               <div>
                 <div className="text-muted-foreground">Avg</div>
-                <div className="font-bold">{game.turnsAway.length > 0 ? (scoreAway / game.turnsAway.length).toFixed(2) : '0.00'}</div>
+                <div className="font-bold">{calculateAverage(scoreAway, game.turnsAway.length)}</div>
               </div>
               <div>
                 <div className="text-muted-foreground">High</div>
-                <div className="font-bold">{game.turnsAway.length > 0 ? Math.max(...game.turnsAway.map(t => t.points)) : 0}</div>
+                <div className="font-bold">{calculateHighestSeries(game.turnsAway)}</div>
               </div>
             </div>
           </CardContent>
