@@ -7,13 +7,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, RotateCcw, Target } from 'lucide-react';
+import { useRef, useEffect } from 'react';
 
 export default function GameSheet() {
   const { id } = useParams();
   const { match, addTurn, undoTurn } = useMatch();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   const gameId = parseInt(id as string);
   const game = match.games.find(g => g.id === gameId);
+
+  // Auto-scroll to bottom when turns change
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
+  }, [game?.turnsHome.length, game?.turnsAway.length]);
 
   if (!game) {
     return <div className="p-8 text-center">Game not found</div>;
@@ -159,7 +168,10 @@ export default function GameSheet() {
           <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground">Inning History</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="grid grid-cols-2 divide-x h-48 overflow-y-auto italic text-sm">
+          <div 
+            ref={scrollContainerRef}
+            className="grid grid-cols-2 divide-x h-48 overflow-y-auto italic text-sm scroll-smooth"
+          >
             <div className="p-4 space-y-1">
               {game.turnsHome.map((t, i) => (
                 <div key={i} className="flex justify-between border-b border-muted/50 pb-1">
